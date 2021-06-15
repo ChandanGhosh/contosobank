@@ -11,7 +11,10 @@ const createTransfer = `-- name: CreateTransfer :one
 INSERT INTO transfers (
     "from_account_id",
     "to_account_id",
-    "amount") VALUES ($1, $2, $3) RETURNING id, from_account_id, to_account_id, amount, created_at
+    "amount"
+) VALUES (
+    $1, $2, $3
+) RETURNING id, from_account_id, to_account_id, amount, created_at
 `
 
 type CreateTransferParams struct {
@@ -49,11 +52,11 @@ func (q *Queries) DeleteTransfer(ctx context.Context, arg DeleteTransferParams) 
 
 const getTransferFromAccount = `-- name: GetTransferFromAccount :one
 SELECT id, from_account_id, to_account_id, amount, created_at FROM transfers
-WHERE from_account_id = $1 LIMIT 1
+WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetTransferFromAccount(ctx context.Context, fromAccountID int64) (Transfer, error) {
-	row := q.db.QueryRowContext(ctx, getTransferFromAccount, fromAccountID)
+func (q *Queries) GetTransferFromAccount(ctx context.Context, id int64) (Transfer, error) {
+	row := q.db.QueryRowContext(ctx, getTransferFromAccount, id)
 	var i Transfer
 	err := row.Scan(
 		&i.ID,

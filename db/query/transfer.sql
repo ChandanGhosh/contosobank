@@ -2,11 +2,14 @@
 INSERT INTO transfers (
     "from_account_id",
     "to_account_id",
-    "amount") VALUES ($1, $2, $3) RETURNING *;
+    "amount"
+) VALUES (
+    $1, $2, $3
+) RETURNING *;
 
 -- name: GetTransferFromAccount :one
 SELECT * FROM transfers
-WHERE from_account_id = $1 LIMIT 1;
+WHERE id = $1 LIMIT 1;
 
 -- name: ListTransfersFromAccount :many
 SELECT * FROM transfers

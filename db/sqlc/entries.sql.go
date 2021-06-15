@@ -11,7 +11,9 @@ const createEntry = `-- name: CreateEntry :one
 INSERT INTO entries (
     "account_id",
     "amount"
-  ) VALUES ($1, $2) RETURNING id, account_id, amount, created_at
+) VALUES (
+  $1, $2
+) RETURNING id, account_id, amount, created_at
 `
 
 type CreateEntryParams struct {
@@ -42,11 +44,11 @@ func (q *Queries) DeleteEntry(ctx context.Context, accountID int64) error {
 
 const getEntry = `-- name: GetEntry :one
 SELECT id, account_id, amount, created_at FROM entries
-WHERE account_id = $1 LIMIT 1
+WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetEntry(ctx context.Context, accountID int64) (Entry, error) {
-	row := q.db.QueryRowContext(ctx, getEntry, accountID)
+func (q *Queries) GetEntry(ctx context.Context, id int64) (Entry, error) {
+	row := q.db.QueryRowContext(ctx, getEntry, id)
 	var i Entry
 	err := row.Scan(
 		&i.ID,
@@ -59,18 +61,20 @@ func (q *Queries) GetEntry(ctx context.Context, accountID int64) (Entry, error) 
 
 const listEntries = `-- name: ListEntries :many
 SELECT id, account_id, amount, created_at FROM entries
-ORDER BY account_id
-LIMIT $1
-OFFSET $2
+WHERE account_id = $1
+ORDER BY id
+LIMIT $2
+OFFSET $3
 `
 
 type ListEntriesParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	AccountID int64 `json:"accountID"`
+	Limit     int32 `json:"limit"`
+	Offset    int32 `json:"offset"`
 }
 
 func (q *Queries) ListEntries(ctx context.Context, arg ListEntriesParams) ([]Entry, error) {
-	rows, err := q.db.QueryContext(ctx, listEntries, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listEntries, arg.AccountID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
